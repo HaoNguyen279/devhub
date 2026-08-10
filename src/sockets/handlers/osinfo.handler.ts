@@ -1,58 +1,66 @@
-import { WebSocket } from 'ws';
-import si from 'systeminformation'
+import type { Socket } from 'socket.io';
+import si from 'systeminformation';
+import type { ClientToServerEvents, ServerToClientEvents } from '../types.ts';
 
+export function registerOsInfoHandler(
+  socket: Socket<ClientToServerEvents, ServerToClientEvents>
+) {
+  let intervalId: NodeJS.Timeout | null = null;
 
-console.log('WebSocket Server đang chạy tại ws://localhost:8080');
-
-export function registerOsInfoHandler(ws: WebSocket) {
-  ws.send(
-    JSON.stringify({
-      type: 'connected',
-      message: 'WebSocket connected',
-    }),
-  );
-   // Lấy data từ OS
   const getSystemStats = async () => {
     try {
-      // Đọc song song các thông số để tối ưu hiệu năng
       const [cpuLoad, cpuFreq, mem] = await Promise.all([
-        si.currentLoad(), // CPU % usage (tổng và từng core)
-        si.cpuCurrentSpeed(), // Tần số CPU (GHz)
-        si.mem() // Bộ nhớ RAM (Bytes)
+        si.currentLoad(),
+        si.cpuCurrentSpeed(),
+        si.mem(),
       ]);
 
-      const data = {
+      return {
         timestamp: new Date().toISOString(),
+        cpuUptime: si.time().uptime,
         cpu: {
-          usagePercent: cpuLoad.currentLoad.toFixed(2), // % CPU đang dùng
-          avgFrequencyGHz: cpuFreq.avg, // Xung nhịp trung bình
-          coresUsage: cpuLoad.cpus.map(c => c.load.toFixed(2)) // % từng core
+          usagePercent: cpuLoad.currentLoad.toFixed(2),
+          avgFrequencyGHz: cpuFreq.avg,
+          coresUsage: cpuLoad.cpus.map((c) => c.load.toFixed(2)),
         },
         ram: {
           totalGB: (mem.total / 1024 ** 3).toFixed(2),
           usedGB: (mem.active / 1024 ** 3).toFixed(2),
-          usagePercent: ((mem.active / mem.total) * 100).toFixed(2)
-        }
+          usagePercent: ((mem.active / mem.total) * 100).toFixed(2),
+        },
       };
-      // Gửi data sang client qua WebSocket
-      return data;
     } catch (error) {
-      console.error('Lỗi khi lấy thông số:', error);
+      console.error('Error fetching system stats:', error);
+      return undefined;
     }
   };
 
-  const intervalId = setInterval(async () => {
-    if (ws.readyState === WebSocket.OPEN) {
-    const data = await getSystemStats();
-      ws.send(
-        JSON.stringify({
-          data: data,
-        }),
-      );
+  const startSystemStatsInterval = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
     }
-  }, 1000);
 
-  ws.on('close', () => {
-    clearInterval(intervalId);
+    intervalId = setInterval(async () => {
+      if (socket.connected) {
+        try {
+          const data = await getSystemStats();
+          if (data) {
+            socket.emit('systemStats', data);
+          }
+          console.log(`Emitted systemStats to ${socket.id}`);
+        } catch (error) {
+          console.error(`Error emitting systemStats for ${socket.id}:`, error);
+        }
+      }
+    }, 1000);
+  };
+
+  startSystemStatsInterval();
+
+  socket.on('disconnect', () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
   });
 }
