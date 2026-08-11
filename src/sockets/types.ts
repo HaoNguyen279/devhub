@@ -24,6 +24,11 @@ export type ServerToClientEvents = {
       random: number;
     };
   }) => void;
+  networkStats :(data: {
+    uploadSpeed: string,
+    downloadSpeed: string
+    }[]
+  )=> void;
 };
 
 export type ClientToServerEvents = {
