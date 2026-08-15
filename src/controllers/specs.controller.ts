@@ -1,5 +1,5 @@
 import { mem } from 'systeminformation';
-import {getCpuInfo,getSystemInfo,getMemoryInfo} from '../services/specs.service.ts';
+import {getCpuInfo,getSystemInfo,getMemoryInfo, getDiskInfo} from '../services/specs.service.ts';
 import {type Request, type Response } from 'express';
 
 export class SpecsController {
@@ -38,5 +38,24 @@ export class SpecsController {
             console.error('Error fetching system info:', error);
             return res.status(500).json({ message: 'Error fetching system info' });
         }
+    }
+
+    async getDiskInfo(req: Request, res: Response) {
+        try {
+            const diskInfo = await getDiskInfo();
+            const cleanedDiskInfo = diskInfo.map(item => {
+                return {
+                    fs : item.fs,
+                    type : item.type,
+                    size : (item.size / 1073741824).toFixed(2),
+                    used : (item.used / 1073741824).toFixed(2),
+                    use : item.use
+                }
+            })
+            return res.status(200).json(cleanedDiskInfo);
+        } catch (error) {
+            console.error('Error fetching disk info:', error);
+            return res.status(500).json({ message: 'Error fetching disk info' });
+        }   
     }
 }

@@ -11,3 +11,6 @@ export async function getMemoryInfo() {
 export async function getSystemInfo() {
     return await si.osInfo();
 }
+export async function getDiskInfo() {
+    return await si.fsSize();
+}

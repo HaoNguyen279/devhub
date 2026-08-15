@@ -47,7 +47,7 @@ export function registerOsInfoHandler(
           if (data) {
             socket.emit('systemStats', data);
           }
-          console.log(`Emitted systemStats to ${socket.id}`);
+          // console.log(`Emitted systemStats to ${socket.id}`);
         } catch (error) {
           console.error(`Error emitting systemStats for ${socket.id}:`, error);
         }

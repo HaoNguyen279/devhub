@@ -27,7 +27,7 @@ export function registerNetworkHandler(socket: Socket<ClientToServerEvents, Serv
                     if (data) {
                         socket.emit('networkStats', data);
                     }
-                    console.log(`Emitted networkStats to ${socket.id}`);
+                    // console.log(`Emitted networkStats to ${socket.id}`);
                 }catch(error) {
                     console.error(`Error emitting networkStats for ${socket.id}:`, error);
                 }
