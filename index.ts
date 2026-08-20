@@ -4,6 +4,7 @@ import { prisma } from './src/config/prisma.ts';
 import http from 'node:http'
 import { initSocketIO } from './src/sockets/index.ts';
 import specsRoute from './src/routes/specs.route.ts';
+import noteRoute from './src/routes/note.route.ts';
 import cors from 'cors';
 const app: Express = express();
 
@@ -21,7 +22,9 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/auth', authRoute);
 
-app.use('/specs', specsRoute);
+app.use('/api/v1/specs', specsRoute);
+
+app.use('/api/v1/notes', noteRoute);
 
 
 const PORT = process.env.PORT || 3000;
@@ -31,7 +34,7 @@ initSocketIO(server);
 
 async function start() {
   try {
-    // await prisma.$connect();
+    await prisma.$connect();
     console.log('Database connected');
 
     server.listen(PORT, () => {

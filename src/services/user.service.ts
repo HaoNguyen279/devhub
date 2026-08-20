@@ -6,7 +6,7 @@ const userRepository = new UserRepository();
 export class UserService {
 
     async getUserByEmail(email : string){
-        const user = userRepository.findUserByEmail(email);
+        const user = userRepository.findByEmail(email);
         return user;
     }
     async verifyUser(user : VerifyUserInput){
@@ -20,7 +20,7 @@ export class UserService {
     async createUser(user : CreateUserInput){
         try{
             const hashedPassword = await bcrypt.hash(user.password, 10)
-            const newUser = await userRepository.createNewUser({...user, password : hashedPassword});
+            const newUser = await userRepository.create({...user, password : hashedPassword});
             return newUser;
         }catch(error){
             console.error(error);

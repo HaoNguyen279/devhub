@@ -5,7 +5,7 @@ import bcrypt from 'bcrypt'
 import type { Prisma } from "../generated/prisma/client.ts";
 import type { CreateUserInput, VerifyUserInput } from "../types/user.types.ts";
 export class UserRepository {
-    findUserByEmail(emailInput : string){
+    findByEmail(emailInput : string){
         try{
             const userFind = prisma.user.findFirst({
                 where:{
@@ -20,7 +20,7 @@ export class UserRepository {
     }
     async verifyUser(userInput : VerifyUserInput){
         try{
-            const userVerify = this.findUserByEmail(userInput.email);
+            const userVerify = this.findByEmail(userInput.email);
             const passwordHash = (await userVerify)?.password;
             if(!passwordHash){
                 throw new Error('User not found');
@@ -35,7 +35,7 @@ export class UserRepository {
             throw new Error('Failed to verify user');
         }
     }
-    createNewUser(userInput : CreateUserInput){
+    create(userInput : CreateUserInput){
         try{
             const newUser = prisma.user.create({
                 data: userInput
